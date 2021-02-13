@@ -1,52 +1,112 @@
+import { render } from "react-dom"
+import React, { Component } from 'react'
+import 'bootstrap/dist/css/bootstrap.css'
 
-import {render} from "react-dom"
-import React, {Component} from 'react'
-
-class StartStopButton extends Component {
+class StopwatchApp extends Component {
     state = {
-        isOpen: true
+        seconds: 0,
+        minutes: 0,
+        hours: 0,
+        isStarted: false
     }
 
     render() {
-        const {article} = this.props
-        const body = this.state.isOpen && <section>{article}</section>
         return (
             <div>
-                <h2>
-                    {article}
-                    <button onClick={this.handleClick}>
-                        {this.state.isOpen ? 'start' : 'stop'}
-                    </button>
-                </h2>
-                {body}
+                <div className="jumbotron">
+                    <h1 className="display-3">Секундомер</h1>
+                </div>
+
+                <h1>{this.zeroPad(this.state.hours, 2)}:{this.zeroPad(this.state.minutes, 2)}:{this.zeroPad(this.state.seconds, 2)}</h1>
+
+                <StartStopButton onStartBtn={this.startTheClock.bind(this)} isStarted={this.state.isStarted} />
+                <ResetButton onResetBtn={this.resetTheClock.bind(this)} />
             </div>
         )
     }
 
-    handleClick = () => {
+    startTheClock = () => {
         this.setState({
-            isOpen: !this.state.isOpen
-        })
+            isStarted: !this.state.isStarted
+        });
+    }
+
+    resetTheClock = () => {
+        this.setState({
+            seconds: 0,
+            minutes: 0,
+            hours: 0,
+            isStarted: false
+        });
+    }
+
+    componentDidMount() {
+        this.timerID = setInterval(
+            () => this.tick(),
+            1000
+        );
+    }
+
+    componentWillUnmount() {
+        clearInterval(this.timerID);
+    }
+
+    tick() {
+        if (!this.state.isStarted) {
+            return;
+        }
+
+        let seconds = this.state.seconds + 1;
+        let minutes = this.state.minutes;
+
+        if (seconds == 60) {
+            seconds = 0;
+            minutes++;
+        }
+
+
+        this.setState({
+            seconds: seconds,
+            minutes: minutes
+
+        });
+    }
+
+    zeroPad(num, places) {
+        num = num.toString();
+        while (num.length < places) {
+            num = "0" + num;
+        }
+        return num;
+    } 
+
+}
+
+class StartStopButton extends Component {
+
+    render() {
+        const { onStartBtn, isStarted } = this.props;
+        return (
+            <div >
+                <button onClick={onStartBtn}>
+                    {!isStarted ? 'start' : 'stop'}
+                </button>
+            </div>
+        )
     }
 }
 
-function Stopwatch()
-{
-    return(
-        <div>
-            <h1>0:0</h1>
-            <StartStopButton/>
-            <ResetButton/>
-        </div>
-    )
+
+
+class ResetButton extends Component {
+    render() {
+        const { onResetBtn } = this.props;
+        return (
+            <div>
+                <button onClick={onResetBtn}>reset</button>
+            </div>
+        )
+    }
 }
 
-function ResetButton()
-{
-    return(
-        <div>
-            <button>reset</button>
-        </div>
-    )
-}
-render(<Stopwatch/>, document.getElementById("root"));
+render(<StopwatchApp />, document.getElementById("root"));
